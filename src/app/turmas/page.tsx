@@ -8,6 +8,7 @@ import {
   User,
   Search,
   MessageCircle,
+  Printer,
 } from "lucide-react";
 import {
   Card,
@@ -70,8 +71,8 @@ export default function TurmasPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsMobile(window.innerWidth < 768); // Tailwind: md = 768px
-    }else{
-      setIsMobile(false)
+    } else {
+      setIsMobile(false);
     }
   }, []);
 
@@ -128,7 +129,7 @@ export default function TurmasPage() {
         if (!checkins || checkins.length === 0) {
           setCriancasPorTurma((prev) => ({
             ...prev,
-            [selectedTurma]: [],
+            [selectedTurma ?? "defaultKey"]: [],
           }));
           return;
         }
@@ -212,7 +213,7 @@ export default function TurmasPage() {
         // Definir um array vazio para a turma selecionada em caso de erro
         setCriancasPorTurma((prev) => ({
           ...prev,
-          [selectedTurma]: [],
+          [selectedTurma ?? "defaultKey"]: [],
         }));
       } finally {
         setIsLoadingCriancas(false);
@@ -269,6 +270,136 @@ export default function TurmasPage() {
       crianca.nome.toLowerCase().includes(termoBusca)
     );
   }, [selectedTurma, criancasPorTurma, searchTerm]);
+
+  const handlePrint = (crianca: Crianca, turma: Turma) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Por favor, permita pop-ups para imprimir a etiqueta.");
+      return;
+    }
+
+    const responsavelInfo = `${crianca.responsavel.nome}`;
+    const horarioCheckin = new Date(crianca.horario_entrada).toLocaleTimeString(
+      "pt-BR",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+
+    const canvas = document.querySelector("canvas");
+    if (!canvas) {
+      console.error("Canvas não encontrado.");
+      return;
+    }
+
+    const qrCodeUrl = canvas.toDataURL("image/png");
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Etiqueta de Check-in</title>
+        <style>
+          @page {
+            size: 90mm 29mm;
+            margin: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+          }
+          .print-container {
+            width: 90mm;
+            height: 29mm;
+            padding: 2mm;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+          }
+          .qr-code {
+            width: 25mm;
+            height: 25mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .info {
+            margin-left: 3mm;
+            width: calc(100% - 28mm);
+            overflow: hidden;
+          }
+          .nome {
+            font-weight: bold;
+            font-size: 12pt;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .turma {
+            font-size: 9pt;
+            margin-bottom: 1mm;
+          }
+          .horario {
+            font-size: 8pt;
+          }
+          .responsavel {
+            font-size: 8pt;
+            margin-top: 1mm;
+          }
+          .id {
+            font-size: 7pt;
+            margin-top: 1mm;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          <div class="qr-code">
+            <img src="${qrCodeUrl}" width="80" height="80" alt="QR Code" />
+          </div>
+          <div class="info">
+            <div class="nome">${crianca.nome}</div>
+            <div class="turma">${turma.nome}</div>
+            <div class="horario">Check-in: ${horarioCheckin}</div>
+            <div class="responsavel">Resp: ${responsavelInfo}</div>
+            <div class="id">ID: ${crianca.id}</div>
+          </div>
+        </div>
+        <script>
+          const img = document.querySelector('img');
+          if (img.complete) {
+            setTimeout(function() {
+              window.print();
+              setTimeout(function() {
+                window.close();
+              }, 500);
+            }, 500);
+          } else {
+            img.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 500);
+              }, 500);
+            };
+            img.onerror = function() {
+              alert('Não foi possível carregar o QR code. Tente novamente.');
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 500);
+              }, 500);
+            };
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  };
 
   return (
     <MainLayout>
@@ -415,6 +546,18 @@ export default function TurmasPage() {
                               <MessageCircle className="h-4 w-4 mr-2" />
                               WhatsApp
                             </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                handlePrint(
+                                  crianca,
+                                  turmas.find((t) => t.id === selectedTurma)!
+                                )
+                              }
+                            >
+                              <Printer className="mr-2 h-4 w-4" />
+                              Imprimir
+                            </Button>
                           </a>
                         ) : (
                           <a
@@ -428,6 +571,18 @@ export default function TurmasPage() {
                             <Button size="sm" variant="outline">
                               <MessageCircle className="h-4 w-4 mr-2" />
                               WhatsApp
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                handlePrint(
+                                  crianca,
+                                  turmas.find((t) => t.id === selectedTurma)!
+                                )
+                              }
+                            >
+                              <Printer className="mr-2 h-4 w-4" />
+                              Imprimir
                             </Button>
                           </a>
                         )}
