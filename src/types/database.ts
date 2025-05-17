@@ -6,6 +6,7 @@ export interface Responsavel {
   foto_url?: string
   created_at: string
   updated_at: string
+  cpf_hash: string
 }
 
 export interface Crianca {

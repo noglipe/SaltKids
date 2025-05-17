@@ -107,7 +107,7 @@ export default function CadastroProfessorPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push("/")}
+                  onClick={() => router.push("/cadastro")}
                 >
                   Cancelar
                 </Button>

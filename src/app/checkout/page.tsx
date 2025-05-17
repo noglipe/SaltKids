@@ -53,6 +53,7 @@ import { RealQrScanner } from "../../components/real-qr-scanner";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { formatarCPF, gerarCPFHash, mascararCPF } from "@/lib/utils";
+import { CheckoutSucessoDialog } from "@/components/CheckoutSucessoDialog";
 
 // Schema de validação do formulário de busca por CPF
 const cpfFormSchema = z.object({
@@ -101,9 +102,17 @@ interface Checkin {
   horario: string;
   checkout_horario: string | null;
   status: string | null;
-  criancas: Crianca[];
-  turma: Turma;
+  criancas: Crianca;
+  turmas: Turma;
 }
+
+type CheckinComRelacionamentos = {
+  id: string;
+  status: string;
+  checkout_horario: string | null;
+  criancas: { nome: string } | null;
+  turmas: { nome: string } | null;
+};
 
 export default function CheckOut() {
   const router = useRouter();
@@ -124,6 +133,8 @@ export default function CheckOut() {
   } | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [dialogAberto, setDialogAberto] = useState(false);
+  const [nomeCrianca, setNomeCrianca] = useState("");
 
   const [parentesco, setParentesco] = useState("");
   // Formulário de busca por CPF
@@ -235,25 +246,76 @@ export default function CheckOut() {
   };
 
   // Função para processar o resultado do QR Code
-  const handleQrCodeResult = (result: string) => {
+  const handleQrCodeResult = async (result: string) => {
     try {
-      // Verificar se o resultado é um ID válido
       if (!result || typeof result !== "string") {
         setScanError("QR Code inválido. Por favor, tente novamente.");
         return;
       }
 
-      // Preencher o formulário de código com o resultado do QR Code
-      codigoForm.setValue("codigo", result);
+      // Extrai o ID do check-in da URL (assumindo o formato /info/checkin/<id>)
+      const partes = result.split("/");
+      const checkinId = partes[partes.length - 1];
 
-      // Fechar o diálogo do scanner
+      setBuscando(true);
+
+      // Buscar o check-in pelo ID
+      const { data: checkin, error: fetchError } = await supabase
+        .from("checkins")
+        .select(
+          `
+            id,
+            status,
+            checkout_horario,
+            criancas (nome),
+            turmas (nome)
+          `
+        )
+        .eq("id", checkinId)
+        .maybeSingle<CheckinComRelacionamentos>();
+
+      if (fetchError || !checkin) {
+        throw new Error("Check-in não encontrado");
+      }
+
+      if (checkin.checkout_horario) {
+        toast("Check-out já realizado", {
+          description: "Esta criança já foi retirada anteriormente.",
+        });
+        return;
+      }
+
+      // Realizar o check-out (atualizando o horário e o status)
+      const { error: updateError } = await supabase
+        .from("checkins")
+        .update({
+          checkout_horario: new Date().toISOString(),
+          status: "finalizado",
+        })
+        .eq("id", checkinId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast("Check-out realizado com sucesso", {
+        description: `Criança: ${
+          (checkin.criancas as { nome: string })?.nome ?? "Desconhecida"
+        }\nTurma: ${(checkin.turmas as { nome: string })?.nome ?? ""}`,
+      });
+
+      setSuccessDialogOpen(true);
+
+      // Reset
       setQrDialogOpen(false);
       setScannerActive(false);
+      setResponsavel(null);
+      setCheckins([]);
     } catch (error) {
       console.error("Erro ao processar QR code:", error);
-      setScanError(
-        "Ocorreu um erro ao processar o QR code. Por favor, tente novamente."
-      );
+      setScanError("Erro ao realizar o check-out. Por favor, tente novamente.");
+    } finally {
+      setBuscando(false);
     }
   };
 
@@ -274,7 +336,15 @@ export default function CheckOut() {
         .eq("crianca_id", checkin.crianca_id)
         .maybeSingle();
 
-      setParentesco(RC.parentesco);
+      if (RC) {
+        setParentesco(RC.parentesco);
+      } else {
+        setParentesco(""); // ou um valor padrão
+        console.warn(
+          "Nenhuma relação encontrada para a criança:",
+          checkin.crianca_id
+        );
+      }
 
       // Realizar check-out
       const { data: checkout, error } = await supabase
@@ -300,9 +370,7 @@ export default function CheckOut() {
 
       // Limpar formulários
       cpfForm.reset();
-      codigoForm.reset();
       checkoutForm.reset();
-      setCheckins([]);
       setCheckinSelecionado(null);
       setResponsavelSelecionado(null);
     } catch (error: any) {
@@ -314,7 +382,9 @@ export default function CheckOut() {
       });
     } finally {
       setIsLoading(false);
-      router.push("/checkout");
+      if (checkins.length > 0) {
+        router.push("/checkout");
+      }
     }
   };
 
@@ -335,7 +405,7 @@ export default function CheckOut() {
           </div>
         </div>
 
-        <Card className="max-w-2xl min-w-2xl mx-auto">
+        <Card className="max-w-2xl sm:min-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Realizar Check-out</CardTitle>
             <CardDescription>
@@ -365,6 +435,7 @@ export default function CheckOut() {
                             <FormControl>
                               <Input
                                 placeholder="Digite o CPF do responsável"
+                                inputMode="numeric"
                                 {...field}
                                 onChange={(e) =>
                                   cpfForm.setValue(
@@ -544,8 +615,8 @@ export default function CheckOut() {
                           )}
                         </p>
                         <p>
-                          Turma: {checkoutRealizado.checkin.turmas?.nome} (
-                          {checkoutRealizado.checkin.turmas?.faixa_etaria})
+                          Turma: {checkoutRealizado.checkin.turmas.nome} (
+                          {checkoutRealizado.checkin.turmas.faixa_etaria})
                         </p>
                       </div>
                     </div>
@@ -586,7 +657,7 @@ export default function CheckOut() {
                     onClick={() => {
                       setSuccessDialogOpen(false);
                       router.push("/checkout");
-                      window.location.reload()
+                      window.location.reload();
                     }}
                   >
                     Fechar

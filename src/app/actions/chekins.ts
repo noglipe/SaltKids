@@ -42,7 +42,7 @@ export async function createCheckin(formData: FormData) {
         horario: new Date().toISOString(),
         status: "ativo",
       })
-      .select()
+      .select("id")
       .single()
 
     if (error) {
