@@ -11,8 +11,14 @@ import {
   LogIn,
   LogOut,
   FileText,
+  Clock,
+  XCircle,
   ClapperboardIcon as ChalkboardTeacher,
   Menu,
+  LucideXCircle,
+  XSquareIcon,
+  XOctagon,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -31,7 +37,7 @@ export default function MainLayout({
     { href: "/checkin", label: "Check-in", icon: LogIn },
     { href: "/checkout", label: "Check-out", icon: LogOut },
     { href: "/turmas", label: "Visualizar Turmas", icon: ChalkboardTeacher },
-    { href: "/checkout-forcado", label: "Checkout Forcado", icon: FileText },
+    { href: "/gerenciar", label: "Editar Cadastros", icon: Settings   },
   ];
 
   return (

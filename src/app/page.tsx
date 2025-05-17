@@ -4,7 +4,8 @@ import {
   LogIn,
   LogOut,
   ClapperboardIcon,
-  Settings
+  Settings,
+  XOctagon
 
 } from "lucide-react";
 import {
@@ -49,6 +50,14 @@ export default function Home() {
       icon: Settings,
       color: "bg-white dark:bg-black",
     },
+    {
+      href: "/checkout-forcado",
+      label: "Checkout Forcado",
+      icon: XOctagon,
+      color: "bg-white dark:bg-black",
+    },
+
+    
   ];
 
   return (

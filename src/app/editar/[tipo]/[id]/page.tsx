@@ -36,15 +36,16 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { use } from "react";
 
 export default function EditarPage({
   params,
 }: {
-  params: { tipo: string; id: string };
+  params: Promise<{ tipo: string; id: string }>;
 }) {
   const router = useRouter();
 
-  const { tipo, id } = params;
+  const { tipo, id } = use(params);
 
   const [formData, setFormData] = useState<any>({});
   const [turmas, setTurmas] = useState<any[]>([]);
@@ -852,6 +853,24 @@ export default function EditarPage({
       return;
     }
 
+    const { data: existentes, error: erroBusca } = await supabase
+      .from("crianca_responsavel")
+      .select("id")
+      .eq("crianca_id", id)
+      .eq("responsavel_id", responsavelId)
+      .limit(1);
+
+    if (erroBusca) {
+      toast.error("Erro ao verificar vínculo existente.");
+      console.error(erroBusca);
+      return;
+    }
+
+    if (existentes && existentes.length > 0) {
+      toast.warning("Este responsável já está vinculado a essa criança.");
+      return;
+    }
+
     const { error, data } = await supabase
       .from("crianca_responsavel")
       .insert({
@@ -868,22 +887,11 @@ export default function EditarPage({
       return;
     }
 
-    // Atualiza localmente a lista de relacionamentos
-    const responsavel = responsaveis.find((r) => r.id === responsavelId)!;
-    setRelacionamentos((prev) => [
-      ...prev,
-      {
-        id: data.id,
-        entidadeId: responsavel.id,
-        nome: responsavel.nome,
-        tipo: "responsavel",
-        parentesco,
-      },
-    ]);
-
     setMostrarModal(false);
-    setNovoVinculo({ responsavelId: "", parentesco: "" });
+
     toast.success("Vínculo criado com sucesso");
+    router.push(`/editar/${tipo}/${id}`);
+    window.location.reload();
   };
 
   return (
@@ -970,15 +978,31 @@ export default function EditarPage({
                       </Button>
 
                       {mostrarModal && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+                        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+                          <div className="bg-black border-1 border-white p-6 rounded shadow-md w-full max-w-md">
                             <h2 className="text-lg font-semibold mb-4">
                               Vincular Responsável
                             </h2>
-                            <form onSubmit={handleNovoVinculo}>
+                            <div>
                               {/* RESPONSÁVEL COM BUSCA E SCROLL FIXO */}
                               <div className="space-y-2">
                                 <Label>Responsável</Label>
+
+                                {/* Exibe selecionado opcionalmente */}
+                                {novoVinculo.responsavelId && (
+                                  <p className="text-sm text-muted-foreground">
+                                    Selecionado:{" "}
+                                    <span className="font-extrabold text-cyan-500">
+                                      {
+                                        responsaveis.find(
+                                          (r) =>
+                                            r.id === novoVinculo.responsavelId
+                                        )?.nome
+                                      }
+                                    </span>
+                                  </p>
+                                )}
+
                                 <div className="rounded-md border">
                                   <Command>
                                     <CommandInput placeholder="Buscar responsável..." />
@@ -1000,19 +1024,6 @@ export default function EditarPage({
                                     </CommandList>
                                   </Command>
                                 </div>
-
-                                {/* Exibe selecionado opcionalmente */}
-                                {novoVinculo.responsavelId && (
-                                  <p className="text-sm text-muted-foreground">
-                                    Selecionado:{" "}
-                                    {
-                                      responsaveis.find(
-                                        (r) =>
-                                          r.id === novoVinculo.responsavelId
-                                      )?.nome
-                                    }
-                                  </p>
-                                )}
                               </div>
 
                               {/* PARENTESCO */}
@@ -1053,14 +1064,20 @@ export default function EditarPage({
                               <div className="flex justify-end gap-2 mt-6">
                                 <Button
                                   type="button"
-                                  variant="ghost"
+                                  variant="secondary"
                                   onClick={() => setMostrarModal(false)}
                                 >
                                   Cancelar
                                 </Button>
-                                <Button type="submit">Vincular</Button>
+                                <Button
+                                  type="button"
+                                  onClick={handleNovoVinculo}
+                                  className="bg-green-700"
+                                >
+                                  Vincular
+                                </Button>
                               </div>
-                            </form>
+                            </div>
                           </div>
                         </div>
                       )}
