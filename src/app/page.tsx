@@ -45,7 +45,7 @@ export default function Home() {
     },
      {
       href: "/gerenciar",
-      label: "Gerenciar",
+      label: "Editar",
       icon: Settings,
       color: "bg-white dark:bg-black",
     },
@@ -67,7 +67,7 @@ export default function Home() {
         {/* Ações rápidas */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Acesso Rápido</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5 lg:grid-cols-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {quickActions.map((action, index) => (
               <Link key={index} href={action.href}>
                 <Card className="h-full transition-all hover:shadow-md">
