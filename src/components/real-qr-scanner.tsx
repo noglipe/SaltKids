@@ -68,27 +68,29 @@ export function RealQrScanner({
           cam.label.toLowerCase().includes("back")
         );
 
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText) => {
-            if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
-              onResult(decodedText);
-              scanner.stop().then(() => {
-                setIsScanning(false);
-              });
+        setTimeout(async () => {
+          await scanner.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+            },
+            (decodedText) => {
+              if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
+                onResult(decodedText);
+                scanner.stop().then(() => {
+                  setIsScanning(false);
+                });
+              }
+            },
+            () => {
+              
             }
-          },
-          (errorMessage) => {
-            console.warn("Erro no scanner:", errorMessage);
-          }
-        );
+          );
 
-        setIsScanning(true);
-        setLoading(false);
+          setIsScanning(true);
+          setLoading(false);
+        }, 300);
       } catch (err) {
         console.error("Erro ao iniciar scanner:", err);
         const msg = err instanceof Error ? err.message : String(err);
@@ -152,7 +154,9 @@ export function RealQrScanner({
       <div
         id={SCANNER_ID}
         className={`w-full ${
-          !loading && !permissionDenied && !error ? "block" : "hidden"
+          !loading && !permissionDenied && !error
+            ? "block"
+            : "opacity-0 h-0 overflow-hidden"
         }`}
         style={{
           height: `${height}px`,
