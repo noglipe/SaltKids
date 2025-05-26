@@ -2,11 +2,9 @@
 
 import type React from "react";
 
-import { cn } from "@/lib/utils";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChevronsUpDown, Plus, User, X } from "lucide-react";
+import { ArrowLeft, Plus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import MainLayout from "@/components/main-layout";
+
 import {
   Dialog,
   DialogContent,
@@ -39,19 +38,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { mascararCPF } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
 
 interface Responsavel {
   id: string;
@@ -68,6 +54,7 @@ interface ResponsavelSelecionado {
 
 export default function CadastroCriancaPage() {
   const router = useRouter();
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,13 +71,6 @@ export default function CadastroCriancaPage() {
     dataNascimento: "",
     observacoes: "",
   });
-  const [searchResponsavel, setSearchResponsavel] = useState("");
-
-  const [open, setOpen] = useState(false);
-
-  const selectedObj = responsaveis.find(
-    (resp) => resp.id === selectedResponsavel
-  );
 
   // Buscar responsáveis e turmas do banco de dados
   useEffect(() => {
@@ -108,7 +88,7 @@ export default function CadastroCriancaPage() {
         setResponsaveis(responsaveisData || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
-        toast.error("Erro", {
+        toast("Erro", {
           description:
             "Não foi possível carregar os dados. Tente novamente mais tarde.",
         });
@@ -131,7 +111,7 @@ export default function CadastroCriancaPage() {
   // Função para adicionar um responsável à lista de selecionados
   const adicionarResponsavel = () => {
     if (!selectedResponsavel) {
-      toast.warning("Atenção", {
+      toast("Atenção", {
         description: "Selecione um responsável.",
       });
       return;
@@ -165,10 +145,10 @@ export default function CadastroCriancaPage() {
 
       // Limpar seleção
       setSelectedResponsavel("");
-      setParentesco("mãe");
+      setParentesco("");
       setDialogOpen(false);
 
-      toast.info("Responsável adicionado", {
+      toast("Responsável adicionado", {
         description: `${responsavel.nome} foi adicionado como ${parentesco}.`,
       });
     }
@@ -187,7 +167,7 @@ export default function CadastroCriancaPage() {
 
     // Validar se pelo menos um responsável foi adicionado
     if (responsaveisSelecionados.length === 0) {
-      toast.warning("Atenção", {
+      toast("Atenção", {
         description: "É necessário adicionar pelo menos um responsável.",
       });
       return;
@@ -216,16 +196,6 @@ export default function CadastroCriancaPage() {
 
       if (error) throw error;
 
-      // Upload da foto se existir
-      if (photoFile && crianca) {
-        const fileExt = photoFile.name.split(".").pop();
-        const fileName = `${crianca.id}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("fotos-criancas")
-          .upload(fileName, photoFile);
-      }
-
       // Criar relações entre criança e responsáveis
       for (const resp of responsaveisSelecionados) {
         const { error: relacaoError } = await supabase
@@ -241,7 +211,7 @@ export default function CadastroCriancaPage() {
         }
       }
 
-      toast.success("Sucesso", {
+      toast("Sucesso", {
         description: "Criança cadastrada com sucesso!",
       });
 
@@ -260,7 +230,7 @@ export default function CadastroCriancaPage() {
 
   return (
     <MainLayout>
-      <div className="container min-w-4xl mx-auto py-6">
+      <div className="container mx-auto py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Button
@@ -297,7 +267,7 @@ export default function CadastroCriancaPage() {
                     required
                   />
                 </div>
-                <div className="space-y-2 ">
+                <div className="space-y-2">
                   <Label htmlFor="dataNascimento">Data de Nascimento</Label>
                   <Input
                     id="dataNascimento"
@@ -307,7 +277,6 @@ export default function CadastroCriancaPage() {
                     type="date"
                     disabled={isLoading}
                     required
-                    className="text-white [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
               </div>
@@ -343,90 +312,52 @@ export default function CadastroCriancaPage() {
                         </DialogDescription>
                       </DialogHeader>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="responsavel">Responsável</Label>
-                        <Popover open={open} onOpenChange={setOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={open}
-                              className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm text-white"
-                              onClick={() => setOpen(!open)} // Garante que o popover abra/feche manualmente
-                            >
-                              {selectedObj
-                                ? selectedObj.nome
-                                : "Selecione um responsável"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command shouldFilter={false}>
-                              <CommandInput
-                                placeholder="Buscar responsável..."
-                                value={searchResponsavel}
-                                onValueChange={setSearchResponsavel}
-                              />
-                              <CommandEmpty>
-                                Nenhum responsável encontrado.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {responsaveis
-                                  .filter((responsavel) =>
-                                    responsavel.nome
-                                      .toLowerCase()
-                                      .includes(searchResponsavel.toLowerCase())
-                                  )
-                                  .map((resp) => (
-                                    <CommandItem
-                                      key={resp.id}
-                                      onSelect={() => {
-                                        setSelectedResponsavel(resp.id);
-                                        setSearchResponsavel("");
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          selectedResponsavel === resp.id
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      {resp.nome}
-                                    </CommandItem>
-                                  ))}
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="responsavel">Responsável</Label>
+                          <Select
+                            value={selectedResponsavel}
+                            onValueChange={setSelectedResponsavel}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um responsável" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {responsaveis.map((resp) => (
+                                <SelectItem key={resp.id} value={resp.id}>
+                                  {resp.nome} - CPF: {resp.cpf.substring(0, 3)}
+                                  ...
+                                  {resp.cpf.substring(resp.cpf.length - 2)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="parentesco">Parentesco</Label>
-                        <Select
-                          value={parentesco}
-                          onValueChange={setParentesco}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o parentesco" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="mãe">Mãe</SelectItem>
-                            <SelectItem value="pai">Pai</SelectItem>
-                            <SelectItem value="Avó/Avó">Avó/Avó</SelectItem>
-                            <SelectItem value="Tio/Tia">Tio/Tia</SelectItem>
-                            <SelectItem value="Irmão/Irmã">
-                              Irmão/Irmã
-                            </SelectItem>
-                            <SelectItem value="Irmã">Irmã</SelectItem>
-                            <SelectItem value="responsável legal">
-                              Responsável Legal
-                            </SelectItem>
-                            <SelectItem value="outro">Outro</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Label htmlFor="parentesco">Parentesco</Label>
+                          <Select
+                            value={parentesco}
+                            onValueChange={setParentesco}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o parentesco" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mãe">Mãe</SelectItem>
+                              <SelectItem value="pai">Pai</SelectItem>
+                              <SelectItem value="avó">Avó / Avó</SelectItem>
+                              <SelectItem value="tio">Tio / Tia</SelectItem>
+                              <SelectItem value="irmão">
+                                Irmão / Irmã
+                              </SelectItem>
+                              <SelectItem value="responsável legal">
+                                Responsável Legal
+                              </SelectItem>
+                              <SelectItem value="outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
 
                       <DialogFooter>
