@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@alzera/react-scanner": "^1.0.18",
     "@aws-sdk/client-s3": "^3.810.0",
     "@aws-sdk/s3-request-presigner": "^3.810.0",
     "@hookform/resolvers": "^5.0.1",
@@ -35,8 +36,8 @@
     "next": "15.3.2",
     "next-themes": "^0.4.6",
     "qrcode.react": "^4.2.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.56.3",
     "react-input-mask": "^2.0.4",
     "shadcn": "^2.5.0",

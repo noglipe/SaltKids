@@ -84,6 +84,7 @@ export default function CadastroCriancaPage() {
     dataNascimento: "",
     observacoes: "",
   });
+  const [searchResponsavel, setSearchResponsavel] = useState("");
 
   const [open, setOpen] = useState(false);
 
@@ -125,37 +126,6 @@ export default function CadastroCriancaPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Função para lidar com o upload de foto
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-
-      // Verificar tamanho do arquivo (máximo 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.warning("Arquivo muito grande", {
-          description: "A foto deve ter no máximo 2MB.",
-        });
-        return;
-      }
-
-      setPhotoFile(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setPhotoPreview(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Função para remover a foto
-  const removerFoto = () => {
-    setPhotoPreview(null);
-    setPhotoFile(null);
   };
 
   // Função para adicionar um responsável à lista de selecionados
@@ -254,21 +224,6 @@ export default function CadastroCriancaPage() {
         const { error: uploadError } = await supabase.storage
           .from("fotos-criancas")
           .upload(fileName, photoFile);
-
-        if (uploadError) {
-          console.error("Erro ao fazer upload da foto:", uploadError);
-          // Não vamos interromper o cadastro por causa da foto
-          toast("Aviso", {
-            description:
-              "A criança foi cadastrada, mas houve um erro ao salvar a foto.",
-          });
-        } else {
-          // Atualizar o registro da criança com o caminho da foto
-          await supabase
-            .from("criancas")
-            .update({ foto_url: fileName })
-            .eq("id", crianca.id);
-        }
       }
 
       // Criar relações entre criança e responsáveis
@@ -370,55 +325,6 @@ export default function CadastroCriancaPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Foto (opcional)</Label>
-                <div className="flex items-center gap-4">
-                  <div className="relative h-24 w-24 overflow-hidden rounded-lg border bg-muted">
-                    {photoPreview ? (
-                      <>
-                        <img
-                          src={photoPreview || "/placeholder.svg"}
-                          alt="Preview"
-                          className="h-full w-full object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 rounded-full bg-background/80 p-1"
-                          onClick={removerFoto}
-                        >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Remover foto</span>
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="photo" className="cursor-pointer">
-                      <div className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
-                        <input
-                          id="photo"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handlePhotoUpload}
-                          disabled={isLoading}
-                        />
-                        Selecionar foto
-                      </div>
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      JPG, PNG ou GIF. Máximo 2MB.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-4 border-t pt-4">
                 <div className="flex justify-between items-center">
                   <Label>Responsáveis</Label>
@@ -441,44 +347,56 @@ export default function CadastroCriancaPage() {
                         <Label htmlFor="responsavel">Responsável</Label>
                         <Popover open={open} onOpenChange={setOpen}>
                           <PopoverTrigger asChild>
-                            <button className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm">
-                              <span>
-                                {selectedObj
-                                  ? `${selectedObj.nome} - CPF: ${mascararCPF(
-                                      selectedObj.cpf
-                                    )}`
-                                  : "Selecione um responsável"}
-                              </span>
-                              <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                            </button>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={open}
+                              className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm text-white"
+                              onClick={() => setOpen(!open)} // Garante que o popover abra/feche manualmente
+                            >
+                              {selectedObj
+                                ? selectedObj.nome
+                                : "Selecione um responsável"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                            </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Buscar responsável..." />
+                            <Command shouldFilter={false}>
+                              <CommandInput
+                                placeholder="Buscar responsável..."
+                                value={searchResponsavel}
+                                onValueChange={setSearchResponsavel}
+                              />
                               <CommandEmpty>
                                 Nenhum responsável encontrado.
                               </CommandEmpty>
                               <CommandGroup>
-                                {responsaveis.map((resp) => (
-                                  <CommandItem
-                                    key={resp.id}
-                                    value={resp.nome}
-                                    onSelect={() => {
-                                      setSelectedResponsavel(resp.id);
-                                      setOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        selectedResponsavel === resp.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {resp.nome} - CPF: {mascararCPF(resp.cpf)}
-                                  </CommandItem>
-                                ))}
+                                {responsaveis
+                                  .filter((responsavel) =>
+                                    responsavel.nome
+                                      .toLowerCase()
+                                      .includes(searchResponsavel.toLowerCase())
+                                  )
+                                  .map((resp) => (
+                                    <CommandItem
+                                      key={resp.id}
+                                      onSelect={() => {
+                                        setSelectedResponsavel(resp.id);
+                                        setSearchResponsavel("");
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selectedResponsavel === resp.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {resp.nome}
+                                    </CommandItem>
+                                  ))}
                               </CommandGroup>
                             </Command>
                           </PopoverContent>
