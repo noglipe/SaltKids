@@ -13,7 +13,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -30,7 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/main-layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Database } from "@/types/supabase";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
@@ -57,7 +55,7 @@ interface Crianca {
 }
 
 export default function TurmasPage() {
-  const [selectedTurma, setSelectedTurma] = useState<string | undefined>();
+  const [selectedTurma, setSelectedTurma] = useState<string | any>();
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [criancasPorTurma, setCriancasPorTurma] = useState<
     Record<string, Crianca[]>
@@ -271,25 +269,19 @@ export default function TurmasPage() {
     );
   }, [selectedTurma, criancasPorTurma, searchTerm]);
 
-
   return (
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Tela do Professor
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Turma</h1>
           <p className="text-muted-foreground">
-            Visualize as crianças presentes na sua turma
+            Visualize as crianças presentes em cada turma
           </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Selecione a Turma</CardTitle>
-            <CardDescription>
-              Escolha a turma para visualizar as crianças presentes
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingTurmas ? (
@@ -404,7 +396,7 @@ export default function TurmasPage() {
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-muted-foreground" />
                           <span>
-                            {crianca.responsavel.nome}:{" "}
+                            {crianca.responsavel.nome}: <br />
                             {crianca.responsavel.telefone}
                           </span>
                         </div>
@@ -423,25 +415,26 @@ export default function TurmasPage() {
                             </Button>
                           </a>
                         ) : (
-                          <a
-                            href={`https://wa.me/${formatarTelefoneParaWhatsApp(
-                              crianca.responsavel.telefone
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hidden md:block"
-                          >
-                            <Button size="sm" variant="outline">
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              WhatsApp
-                            </Button>
-                            <Button
-                              variant="outline"
+                          <div className="flex gap-2 flex-wrap">
+                            <a
+                              href={`https://wa.me/${formatarTelefoneParaWhatsApp(
+                                crianca.responsavel.telefone
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className=""
                             >
-                              <Printer className="mr-2 h-4 w-4" />
+                              <Button size="sm" variant="outline">
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                WhatsApp
+                              </Button>
+                            </a>
+
+                            <Button size="sm" variant="outline">
+                              <Printer className="h-4 w-4" />
                               Imprimir
                             </Button>
-                          </a>
+                          </div>
                         )}
                       </div>
                     </CardContent>
