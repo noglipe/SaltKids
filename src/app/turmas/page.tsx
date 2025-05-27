@@ -31,6 +31,7 @@ import MainLayout from "@/components/main-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import Etiqueta from "@/components/handlePrint";
 
 interface Turma {
   id: string;
@@ -429,11 +430,7 @@ export default function TurmasPage() {
                                 WhatsApp
                               </Button>
                             </a>
-
-                            <Button size="sm" variant="outline">
-                              <Printer className="h-4 w-4" />
-                              Imprimir
-                            </Button>
+                            <Etiqueta turmaId={selectedTurma} crianca={crianca} responsavel={crianca.responsavel} />
                           </div>
                         )}
                       </div>
