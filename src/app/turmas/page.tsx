@@ -271,140 +271,6 @@ export default function TurmasPage() {
     );
   }, [selectedTurma, criancasPorTurma, searchTerm]);
 
-  const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Por favor, permita pop-ups para imprimir a etiqueta.");
-      return;
-    }
-
-    const crianca = criancas.find((c) => c.id === criancaValue);
-    const turma = turmas.find((t) => t.id === turmaValue);
-    const responsavelInfo = responsavelSelecionado
-      ? `${responsavelSelecionado.nome} (${responsavelSelecionado.parentesco})`
-      : "Responsável";
-
-    const canvas = document.querySelector("canvas");
-    if (!canvas) {
-      console.error("Canvas não encontrado.");
-      return;
-    }
-
-    const qrCodeUrl = canvas.toDataURL("image/png");
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Etiqueta de Check-in</title>
-          <style>
-            @page {
-              size: 90mm 29mm;
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              font-family: Arial, sans-serif;
-            }
-            .print-container {
-              width: 90mm;
-              height: 29mm;
-              padding: 2mm;
-              box-sizing: border-box;
-              display: flex;
-              align-items: center;
-            }
-            .qr-code {
-              width: 25mm;
-              height: 25mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .info {
-              margin-left: 3mm;
-              width: calc(100% - 28mm);
-              overflow: hidden;
-            }
-            .nome {
-              font-weight: bold;
-              font-size: 12pt;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-            .turma {
-              font-size: 9pt;
-              margin-bottom: 1mm;
-            }
-            .horario {
-              font-size: 8pt;
-            }
-            .responsavel {
-              font-size: 8pt;
-              margin-top: 1mm;
-            }
-            .link {
-              font-size: 7pt;
-              margin-top: 1mm;
-            }
-            .id {
-              font-size: 7pt;
-              margin-top: 1mm;
-              color: #666;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-container">
-            <div class="qr-code">
-              <!-- Usar uma API externa para gerar o QR code -->
-              <img src="${qrCodeUrl}" width="80" height="80" alt="QR Code" />
-            </div>
-            <div class="info">
-              <div class="nome">${crianca?.nome || "Nome da Criança"}</div>
-              <div class="turma">${turma?.nome || "Turma"}</div>
-              <div class="horario">Check-in: ${horarioCheckin}</div>
-              <div class="responsavel">Resp: ${responsavelInfo}</div>
-              <div class="id">ID: ${crianca?.id || "000000"}</div>
-            </div>
-          </div>
-          <script>
-            // Garantir que a imagem seja carregada antes de imprimir
-            const img = document.querySelector('img');
-            if (img.complete) {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() {
-                  window.close();
-                }, 500);
-              }, 500);
-            } else {
-              img.onload = function() {
-                setTimeout(function() {
-                  window.print();
-                  setTimeout(function() {
-                    window.close();
-                  }, 500);
-                }, 500);
-              };
-              
-              // Fallback se a imagem falhar ao carregar
-              img.onerror = function() {
-                alert('Não foi possível carregar o QR code. Tente novamente.');
-                setTimeout(function() {
-                  window.print();
-                  setTimeout(function() {
-                    window.close();
-                  }, 500);
-                }, 500);
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-  };
 
   return (
     <MainLayout>
@@ -512,6 +378,10 @@ export default function TurmasPage() {
                             Entrada:{" "}
                             {new Date(
                               crianca.horario_entrada
+                            ).toLocaleDateString("pt-BR")}
+                            {" às "}
+                            {new Date(
+                              crianca.horario_entrada
                             ).toLocaleTimeString("pt-BR", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -545,23 +415,11 @@ export default function TurmasPage() {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className=" sm:hidden"
+                            className=" "
                           >
                             <Button size="sm" variant="outline">
                               <MessageCircle className="h-4 w-4 mr-2" />
                               WhatsApp
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() =>
-                                handlePrint(
-                                  crianca,
-                                  turmas.find((t) => t.id === selectedTurma)!
-                                )
-                              }
-                            >
-                              <Printer className="mr-2 h-4 w-4" />
-                              Imprimir
                             </Button>
                           </a>
                         ) : (
@@ -579,12 +437,6 @@ export default function TurmasPage() {
                             </Button>
                             <Button
                               variant="outline"
-                              onClick={() =>
-                                handlePrint(
-                                  crianca,
-                                  turmas.find((t) => t.id === selectedTurma)!
-                                )
-                              }
                             >
                               <Printer className="mr-2 h-4 w-4" />
                               Imprimir
