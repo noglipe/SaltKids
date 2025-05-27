@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,8 +55,6 @@ interface ResponsavelSelecionado {
 export default function CadastroCriancaPage() {
   const router = useRouter();
 
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
@@ -65,13 +63,14 @@ export default function CadastroCriancaPage() {
   >([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedResponsavel, setSelectedResponsavel] = useState<string>("");
-  const [parentesco, setParentesco] = useState<string>("mãe");
+  const [parentesco, setParentesco] = useState<string>("");
   const [formData, setFormData] = useState({
     nome: "",
     dataNascimento: "",
     observacoes: "",
   });
-
+  const [filtroResponsavel, setFiltroResponsavel] = useState("");
+  const dateRef = useRef(null);
   // Buscar responsáveis e turmas do banco de dados
   useEffect(() => {
     const fetchData = async () => {
@@ -273,7 +272,9 @@ export default function CadastroCriancaPage() {
                     id="dataNascimento"
                     name="dataNascimento"
                     value={formData.dataNascimento}
+                    ref={dateRef}
                     onChange={handleChange}
+                    onFocus={() => dateRef.current?.showPicker()}
                     type="date"
                     disabled={isLoading}
                     required
@@ -323,13 +324,38 @@ export default function CadastroCriancaPage() {
                               <SelectValue placeholder="Selecione um responsável" />
                             </SelectTrigger>
                             <SelectContent>
-                              {responsaveis.map((resp) => (
-                                <SelectItem key={resp.id} value={resp.id}>
-                                  {resp.nome} - CPF: {resp.cpf.substring(0, 3)}
-                                  ...
-                                  {resp.cpf.substring(resp.cpf.length - 2)}
-                                </SelectItem>
-                              ))}
+                              <div className="px-2 py-1">
+                                <Input
+                                  placeholder="Buscar por nome ou CPF"
+                                  value={filtroResponsavel}
+                                  onChange={(e) =>
+                                    setFiltroResponsavel(e.target.value)
+                                  }
+                                  className="text-sm"
+                                />
+                              </div>
+                              {responsaveis
+                                .filter(
+                                  (resp) =>
+                                    resp.nome
+                                      .toLowerCase()
+                                      .includes(
+                                        filtroResponsavel.toLowerCase()
+                                      ) ||
+                                    resp.cpf
+                                      .replace(/\D/g, "")
+                                      .includes(
+                                        filtroResponsavel.replace(/\D/g, "")
+                                      )
+                                )
+                                .map((resp) => (
+                                  <SelectItem key={resp.id} value={resp.id}>
+                                    {resp.nome} - CPF:{" "}
+                                    {resp.cpf.substring(0, 3)}
+                                    ...
+                                    {resp.cpf.substring(resp.cpf.length - 2)}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -344,13 +370,11 @@ export default function CadastroCriancaPage() {
                               <SelectValue placeholder="Selecione o parentesco" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="mãe">Mãe</SelectItem>
+                              <SelectItem value="mae">Mãe</SelectItem>
                               <SelectItem value="pai">Pai</SelectItem>
-                              <SelectItem value="avó">Avó / Avó</SelectItem>
-                              <SelectItem value="tio">Tio / Tia</SelectItem>
-                              <SelectItem value="irmão">
-                                Irmão / Irmã
-                              </SelectItem>
+                              <SelectItem value="avo">Avó/Avó</SelectItem>
+                              <SelectItem value="tio">Tio/Tia</SelectItem>
+                              <SelectItem value="irmao">Irmão/Irmã</SelectItem>
                               <SelectItem value="responsável legal">
                                 Responsável Legal
                               </SelectItem>
