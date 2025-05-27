@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, User, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +38,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface Responsavel {
   id: string;
@@ -70,7 +84,9 @@ export default function CadastroCriancaPage() {
     observacoes: "",
   });
   const [filtroResponsavel, setFiltroResponsavel] = useState("");
+  const [open, setOpen] = useState(false);
   const dateRef = useRef(null);
+
   // Buscar responsáveis e turmas do banco de dados
   useEffect(() => {
     const fetchData = async () => {
@@ -146,6 +162,7 @@ export default function CadastroCriancaPage() {
       setSelectedResponsavel("");
       setParentesco("");
       setDialogOpen(false);
+      setFiltroResponsavel("");
 
       toast("Responsável adicionado", {
         description: `${responsavel.nome} foi adicionado como ${parentesco}.`,
@@ -227,6 +244,7 @@ export default function CadastroCriancaPage() {
     }
   };
 
+
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
@@ -274,7 +292,7 @@ export default function CadastroCriancaPage() {
                     value={formData.dataNascimento}
                     ref={dateRef}
                     onChange={handleChange}
-                    onFocus={() => dateRef.current?.showPicker()}
+                    className="calendar-white"
                     type="date"
                     disabled={isLoading}
                     required
@@ -296,108 +314,109 @@ export default function CadastroCriancaPage() {
               </div>
 
               <div className="space-y-4 border-t pt-4">
-                <div className="flex justify-between items-center">
-                  <Label>Responsáveis</Label>
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" disabled={isLoading || isFetchingData}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Responsável
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Adicionar Responsável</DialogTitle>
-                        <DialogDescription>
-                          Selecione um responsável e defina o parentesco.
-                        </DialogDescription>
-                      </DialogHeader>
+                <Dialog>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Responsável</DialogTitle>
+                      <DialogDescription>
+                        Selecione um responsável e defina o parentesco.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
 
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="responsavel">Responsável</Label>
-                          <Select
-                            value={selectedResponsavel}
-                            onValueChange={setSelectedResponsavel}
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Responsável</Label>
+                      <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            className="w-full justify-between"
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um responsável" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <div className="px-2 py-1">
-                                <Input
-                                  placeholder="Buscar por nome ou CPF"
-                                  value={filtroResponsavel}
-                                  onChange={(e) =>
-                                    setFiltroResponsavel(e.target.value)
-                                  }
-                                  className="text-sm"
-                                />
-                              </div>
-                              {responsaveis
-                                .filter(
-                                  (resp) =>
-                                    resp.nome
+                            {selectedResponsavel
+                              ? responsaveis.find(
+                                  (r) => r.id === selectedResponsavel
+                                )?.nome
+                              : "Selecione um responsável..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Buscar responsável..."
+                              value={filtroResponsavel}
+                              onValueChange={setFiltroResponsavel}
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                Nenhum responsável encontrado.
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {responsaveis
+                                  .filter((r) =>
+                                    r.nome
                                       .toLowerCase()
-                                      .includes(
-                                        filtroResponsavel.toLowerCase()
-                                      ) ||
-                                    resp.cpf
-                                      .replace(/\D/g, "")
-                                      .includes(
-                                        filtroResponsavel.replace(/\D/g, "")
-                                      )
-                                )
-                                .map((resp) => (
-                                  <SelectItem key={resp.id} value={resp.id}>
-                                    {resp.nome} - CPF:{" "}
-                                    {resp.cpf.substring(0, 3)}
-                                    ...
-                                    {resp.cpf.substring(resp.cpf.length - 2)}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                                      .includes(filtroResponsavel.toLowerCase())
+                                  )
+                                  .map((r) => (
+                                    <CommandItem
+                                      key={r.id}
+                                      value={r.nome}
+                                      onSelect={() => {
+                                        setSelectedResponsavel(r.id);
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selectedResponsavel === r.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {r.nome}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="parentesco">Parentesco</Label>
-                          <Select
-                            value={parentesco}
-                            onValueChange={setParentesco}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o parentesco" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="mae">Mãe</SelectItem>
-                              <SelectItem value="pai">Pai</SelectItem>
-                              <SelectItem value="avo">Avó/Avó</SelectItem>
-                              <SelectItem value="tio">Tio/Tia</SelectItem>
-                              <SelectItem value="irmao">Irmão/Irmã</SelectItem>
-                              <SelectItem value="responsável legal">
-                                Responsável Legal
-                              </SelectItem>
-                              <SelectItem value="outro">Outro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parentesco">Parentesco</Label>
+                      <Select value={parentesco} onValueChange={setParentesco}>
+                        <SelectTrigger id="parentesco" className="w-full">
+                          <SelectValue placeholder="Ex: Pai, Mãe, Tio, etc." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pai">Pai</SelectItem>
+                          <SelectItem value="Mãe">Mãe</SelectItem>
+                          <SelectItem value="Tio">Tio</SelectItem>
+                          <SelectItem value="Tia">Tia</SelectItem>
+                          <SelectItem value="Avô">Avô</SelectItem>
+                          <SelectItem value="Avó">Avó</SelectItem>
+                          <SelectItem value="Irmão">Irmão</SelectItem>
+                          <SelectItem value="Irmã">Irmã</SelectItem>
+                          <SelectItem value="Outro">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-                      <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setDialogOpen(false)}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button onClick={adicionarResponsavel}>
-                          Adicionar
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                  <DialogFooter>
+                    <Button type="button" onClick={adicionarResponsavel}>
+                      Adicionar
+                    </Button>
+                  </DialogFooter>
+                </Dialog>
 
                 {responsaveisSelecionados.length === 0 ? (
                   <div className="p-8 text-center border rounded-md bg-gray-50">

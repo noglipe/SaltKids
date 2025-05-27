@@ -120,3 +120,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.calendar-white::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
