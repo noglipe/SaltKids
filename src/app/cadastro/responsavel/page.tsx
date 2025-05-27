@@ -106,6 +106,7 @@ export default function CadastroResponsavelPage() {
                     placeholder="Nome do responsável"
                     disabled={isLoading}
                     onChange={(e) => setNome(e.target.value)}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -119,6 +120,7 @@ export default function CadastroResponsavelPage() {
                     onChange={(e) => setCpfInput(formatarCPF(e.target.value))}
                     maxLength={14}
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -134,6 +136,7 @@ export default function CadastroResponsavelPage() {
                     }
                     maxLength={15}
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
               </div>

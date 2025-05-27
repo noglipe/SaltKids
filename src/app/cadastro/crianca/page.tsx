@@ -52,6 +52,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import SelectParentesco from "@/components/selectParentesco";
 
 interface Responsavel {
   id: string;
@@ -244,7 +245,6 @@ export default function CadastroCriancaPage() {
     }
   };
 
-
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
@@ -282,6 +282,7 @@ export default function CadastroCriancaPage() {
                     placeholder="Nome da criança"
                     disabled={isLoading}
                     required
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -396,17 +397,7 @@ export default function CadastroCriancaPage() {
                         <SelectTrigger id="parentesco" className="w-full">
                           <SelectValue placeholder="Ex: Pai, Mãe, Tio, etc." />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pai">Pai</SelectItem>
-                          <SelectItem value="Mãe">Mãe</SelectItem>
-                          <SelectItem value="Tio">Tio</SelectItem>
-                          <SelectItem value="Tia">Tia</SelectItem>
-                          <SelectItem value="Avô">Avô</SelectItem>
-                          <SelectItem value="Avó">Avó</SelectItem>
-                          <SelectItem value="Irmão">Irmão</SelectItem>
-                          <SelectItem value="Irmã">Irmã</SelectItem>
-                          <SelectItem value="Outro">Outro</SelectItem>
-                        </SelectContent>
+                        <SelectParentesco />
                       </Select>
                     </div>
                   </div>

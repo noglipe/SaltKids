@@ -37,6 +37,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { use } from "react";
+import SelectParentesco from "@/components/selectParentesco";
 
 export default function EditarPage({
   params,
@@ -695,6 +696,7 @@ export default function EditarPage({
           value={formData.nome || ""}
           onChange={handleChange}
           required
+          autoComplete="off"
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -732,6 +734,7 @@ export default function EditarPage({
           value={formData.nome || ""}
           onChange={handleChange}
           required
+          autoComplete="off"
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -770,6 +773,7 @@ export default function EditarPage({
           value={formData.nome || ""}
           onChange={handleChange}
           required
+          autoComplete="off"
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -1040,24 +1044,7 @@ export default function EditarPage({
                                   <SelectTrigger>
                                     <SelectValue placeholder="Selecione o parentesco" />
                                   </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="mãe">Mãe</SelectItem>
-                                    <SelectItem value="pai">Pai</SelectItem>
-                                    <SelectItem value="Avó/Avó">
-                                      Avó/Avó
-                                    </SelectItem>
-                                    <SelectItem value="Tio/Tia">
-                                      Tio/Tia
-                                    </SelectItem>
-                                    <SelectItem value="Irmão/Irmã">
-                                      Irmão/Irmã
-                                    </SelectItem>
-                                    <SelectItem value="Irmã">Irmã</SelectItem>
-                                    <SelectItem value="responsável legal">
-                                      Responsável Legal
-                                    </SelectItem>
-                                    <SelectItem value="outro">Outro</SelectItem>
-                                  </SelectContent>
+                                  <SelectParentesco />
                                 </Select>
                               </div>
 

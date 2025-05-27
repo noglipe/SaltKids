@@ -576,12 +576,13 @@ export default function CheckinPage() {
                     )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   <Label htmlFor="turma">Turma</Label>
                   {isLoading ? (
                     <Skeleton className="h-10 w-full" />
                   ) : (
                     <Select
+                    
                       value={turmaValue}
                       onValueChange={(value) => {
                         setTurmaValue(value);
@@ -590,7 +591,7 @@ export default function CheckinPage() {
                         );
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecione uma turma" />
                       </SelectTrigger>
                       <SelectContent>

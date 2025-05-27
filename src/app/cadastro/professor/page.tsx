@@ -85,6 +85,7 @@ export default function CadastroProfessorPage() {
                     placeholder="Nome do professor"
                     disabled={isLoading}
                     onChange={(e) => setNome(e.target.value)}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -99,6 +100,7 @@ export default function CadastroProfessorPage() {
                       setTelefone(formatarTelefone(e.target.value))
                     }
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
               </div>

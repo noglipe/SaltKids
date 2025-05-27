@@ -87,6 +87,7 @@ export default function CadastroTurmaPage() {
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Berçário, Maternal"
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -102,6 +103,7 @@ export default function CadastroTurmaPage() {
                     onChange={(e) => setFaixaEtaria(e.target.value)}
                     placeholder="Ex: 0-1 ano, 2-3 anos"
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -118,6 +120,7 @@ export default function CadastroTurmaPage() {
                     onChange={(e) => setCapacidade(e.target.value)}
                     placeholder="Ex: 20"
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
@@ -130,6 +133,7 @@ export default function CadastroTurmaPage() {
                     onChange={(e) => setSala(e.target.value)}
                     placeholder="Ex: Sala 1"
                     disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
               </div>
