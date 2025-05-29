@@ -15,7 +15,6 @@ export function criptografarTexto(text: string): string {
     const key = process.env.NEXT_PUBLIC_KEY;
     try {
         const ciphertext = CryptoJS.AES.encrypt(text, key).toString();
-        console.log(ciphertext);
         return ciphertext;
     } catch (error) {
         console.error("Erro durante a criptografia:", error);
