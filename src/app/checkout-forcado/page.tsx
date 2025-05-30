@@ -52,7 +52,17 @@ interface Crianca {
       id: string;
       nome: string;
     };
-  };
+  } | null;
+}
+
+interface Checkin {
+  id: string;
+  horario: string;
+  crianca_id: string;
+  criancas: { id: string; nome: string } | null;
+  responsaveis: { id: string; nome: string } | null;
+  turmas: { id: string; nome: string } | null;
+  status: string;
 }
 
 export default function CheckoutForcadoPage() {
@@ -89,7 +99,10 @@ export default function CheckoutForcadoPage() {
           .order("horario", { ascending: false });
 
         if (checkinsError) {
-          throw new Error(`Erro ao buscar check-ins: ${checkinsError.message}`);
+          toast.error("Erro ao buscar dados", {
+            description:
+              "Não foi possível carregar a lista de check-ins ativos.",
+          });
         }
 
         if (!checkinsData || checkinsData.length === 0) {
@@ -98,22 +111,24 @@ export default function CheckoutForcadoPage() {
         }
 
         // Transformar os dados para o formato esperado pelo componente
-        const criancasFormatadas = checkinsData.map((checkin) => ({
-          id: checkin.criancas?.id || "",
-          nome: checkin.criancas?.nome || "",
-          turma: {
-            id: checkin.turmas?.id || "",
-            nome: checkin.turmas?.nome || "",
-          },
-          checkin: {
-            id: checkin.id,
-            horario: checkin.horario,
-            responsavel: {
-              id: checkin.responsaveis?.id || "",
-              nome: checkin.responsaveis?.nome || "",
+        const criancasFormatadas= checkinsData.map(
+          (checkin: Checkin|any) => ({
+            id: checkin.criancas?.id || "",
+            nome: checkin.criancas?.nome || "",
+            turma: {
+              id: checkin.turmas?.id || "",
+              nome: checkin.turmas?.nome || "",
             },
-          },
-        }));
+            checkin: {
+              id: checkin.id,
+              horario: checkin.horario,
+              responsavel: {
+                id: checkin.responsaveis?.id || "",
+                nome: checkin.responsaveis?.nome || "",
+              },
+            },
+          })
+        );
 
         setCriancas(criancasFormatadas);
       } catch (error) {
@@ -163,7 +178,7 @@ export default function CheckoutForcadoPage() {
     try {
       setIsSubmitting(true);
 
-      if (!selectedCrianca?.checkin.id) {
+      if (!selectedCrianca?.checkin?.id) {
         throw new Error("ID do check-in não encontrado");
       }
 
@@ -281,8 +296,6 @@ export default function CheckoutForcadoPage() {
                       const crianca = criancas.find((c) => c.id === value);
                       setSelectedCrianca(crianca || null);
                     }}
-                    
-                    
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma criança" />
@@ -364,7 +377,7 @@ export default function CheckoutForcadoPage() {
                       </span>
                       <span className="text-sm font-medium flex items-center">
                         <Clock className="mr-1 h-3 w-3" />
-                        {formatHorario(selectedCrianca.checkin.horario)}
+                        {selectedCrianca.checkin && formatHorario(selectedCrianca.checkin.horario)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -372,7 +385,7 @@ export default function CheckoutForcadoPage() {
                         Responsável pelo check-in:
                       </span>
                       <span className="text-sm font-medium">
-                        {selectedCrianca.checkin.responsavel.nome}
+                        {selectedCrianca.checkin && selectedCrianca.checkin.responsavel.nome}
                       </span>
                     </div>
                     <div className="flex justify-between">

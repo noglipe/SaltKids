@@ -7,14 +7,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-  ArrowLeft,
-  Search,
-  
-  UserRound,
-  Check,
-  Clock,
-} from "lucide-react";
+import { ArrowLeft, Search, UserRound, Check, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,8 +65,6 @@ const checkoutFormSchema = z.object({
   responsavelId: z.string({ required_error: "Selecione um responsável" }),
   observacoes: z.string().optional(),
 });
-
-
 
 export default function CheckOut() {
   const router = useRouter();
@@ -200,7 +191,6 @@ export default function CheckOut() {
     }
   };
 
-
   // Função para realizar check-out
   const realizarCheckout = async (checkin: Checkin) => {
     const confirmar = window.confirm(
@@ -208,7 +198,6 @@ export default function CheckOut() {
     );
 
     if (!confirmar) return;
-
 
     try {
       //bucar criança
@@ -263,7 +252,6 @@ export default function CheckOut() {
           "Não foi possível realizar o check-out. Tente novamente.",
       });
     } finally {
-
       if (checkins.length > 0) {
         router.push("/checkout");
       }
@@ -316,6 +304,7 @@ export default function CheckOut() {
                           <div className="flex space-x-2">
                             <FormControl>
                               <Input
+                                autoComplete="off"
                                 placeholder="Digite o CPF do responsável"
                                 inputMode="numeric"
                                 {...field}
