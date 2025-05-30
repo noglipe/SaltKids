@@ -73,30 +73,10 @@ const checkoutFormSchema = z.object({
   observacoes: z.string().optional(),
 });
 
-interface Responsavel {
-  id: string;
-  nome: string;
-  cpf: string;
-  telefone: string;
-  parentesco?: string;
-}
 
-interface Crianca {
-  id: string;
-  nome: string;
-  data_nascimento: string;
-  foto_url: string | null;
-}
-
-interface Turma {
-  id: string;
-  nome: string;
-  faixa_etaria: string;
-}
 
 export default function CheckOut() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [buscando, setBuscando] = useState(false);
   const [responsavel, setResponsavel] = useState<Responsavel | null>(null);
   const [checkins, setCheckins] = useState<any[]>([]);
@@ -105,16 +85,11 @@ export default function CheckOut() {
   );
   const [responsavelSelecionado, setResponsavelSelecionado] =
     useState<Responsavel | null>(null);
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [checkoutRealizado, setCheckoutRealizado] = useState<{
     checkin: Checkin;
     responsavel: Responsavel;
   } | null>(null);
-  const [scannerActive, setScannerActive] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [dialogAberto, setDialogAberto] = useState(false);
-  const [nomeCrianca, setNomeCrianca] = useState("");
 
   const [parentesco, setParentesco] = useState("");
   // Formulário de busca por CPF
@@ -225,89 +200,6 @@ export default function CheckOut() {
     }
   };
 
-  // Função para processar o resultado do QR Code
-  const handleQrCodeResult = async (result: string) => {
-    try {
-      if (!result || typeof result !== "string") {
-        setScanError("QR Code inválido. Por favor, tente novamente.");
-        return;
-      }
-
-      // Extrai o ID do check-in da URL (assumindo o formato /info/checkin/<id>)
-      const partes = result.split("/");
-      const checkinId = partes[partes.length - 1];
-
-      setBuscando(true);
-
-      // Buscar o check-in pelo ID
-      const { data: checkin, error: fetchError } = await supabase
-        .from("checkins")
-        .select(
-          `
-            id,
-            status,
-            checkout_horario,
-            criancas (nome),
-            turmas (nome)
-          `
-        )
-        .eq("id", checkinId)
-        .maybeSingle<CheckinComRelacionamentos>();
-
-      if (fetchError || !checkin) {
-        throw new Error("Check-in não encontrado");
-      }
-
-      if (checkin.checkout_horario) {
-        toast("Check-out já realizado", {
-          description: "Esta criança já foi retirada anteriormente.",
-        });
-        return;
-      }
-
-      // Realizar o check-out (atualizando o horário e o status)
-      const { error: updateError } = await supabase
-        .from("checkins")
-        .update({
-          checkout_horario: new Date().toISOString(),
-          status: "finalizado",
-        })
-        .eq("id", checkinId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      const { data: chekinData, error: errorChekin } = await supabase
-        .from("checkins")
-        .select("*")
-        .eq("id", checkinId)
-        .single();
-
-      if (errorChekin) throw errorChekin;
-
-      toast("Check-out realizado com sucesso", {
-        description: `Criança: ${
-          (checkin.criancas as { nome: string })?.nome ?? "Desconhecida"
-        }\nTurma: ${(checkin.turmas as { nome: string })?.nome ?? ""}`,
-      });
-
-      setCheckins(chekinData);
-
-      setSuccessDialogOpen(true);
-
-      // Reset
-      setQrDialogOpen(false);
-      setScannerActive(false);
-      setResponsavel(null);
-      setCheckins([]);
-    } catch (error) {
-      console.error("Erro ao processar QR code:", error);
-      setScanError("Erro ao realizar o check-out. Por favor, tente novamente.");
-    } finally {
-      setBuscando(false);
-    }
-  };
 
   // Função para realizar check-out
   const realizarCheckout = async (checkin: Checkin) => {
@@ -317,7 +209,7 @@ export default function CheckOut() {
 
     if (!confirmar) return;
 
-    setIsLoading(true);
+
     try {
       //bucar criança
       const { data: RC, error: RCError } = await supabase
@@ -371,7 +263,7 @@ export default function CheckOut() {
           "Não foi possível realizar o check-out. Tente novamente.",
       });
     } finally {
-      setIsLoading(false);
+
       if (checkins.length > 0) {
         router.push("/checkout");
       }

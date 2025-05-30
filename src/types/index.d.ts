@@ -16,3 +16,11 @@ interface Checkin {
   criancas: Crianca;
   turmas: Turma;
 }
+
+interface Responsavel {
+  id: string;
+  nome: string;
+  cpf: string;
+  telefone: string;
+  parentesco?: string;
+}
