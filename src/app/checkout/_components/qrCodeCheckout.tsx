@@ -1,6 +1,6 @@
 "use client";
 
-import { RealQrScanner } from "@/components/real-qr-scanner";
+import { RealQrScanner } from "@/app/checkout/_components/real-qr-scanner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,14 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase/client";
 import { Check, QrCode } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import QrScanner from "./real-qr-scanner2";
 
 export default function QrCodeCheckout() {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [jaRealizado, setJaRealizado] = useState(true);
   const [scanError, setScanError] = useState<string | null>(null);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
@@ -30,8 +32,6 @@ export default function QrCodeCheckout() {
       // Extrai o ID do check-in da URL (assumindo o formato /info/checkin/<id>)
       const partes = result.split("/");
       const checkinId = partes[partes.length - 1];
-
-
 
       // Buscar o check-in pelo ID
       const { data: checkin, error: fetchError } = await supabase
@@ -57,6 +57,7 @@ export default function QrCodeCheckout() {
         toast.warning("Check-out já realizado", {
           description: "Esta criança já foi retirada anteriormente.",
         });
+        setJaRealizado(true);
         return;
       }
 
@@ -113,7 +114,7 @@ export default function QrCodeCheckout() {
             </DialogDescription>
           </DialogHeader>
           <div className="h-[300px]">
-            <RealQrScanner onResult={handleQrCodeResult} />
+            <QrScanner onResult={handleQrCodeResult} />
           </div>
           {scanError && (
             <div className="text-red-500 text-sm mt-2">{scanError}</div>
@@ -125,11 +126,17 @@ export default function QrCodeCheckout() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center text-green-600">
-              <Check className="mr-2 h-5 w-5" />
-              Check-out Realizado com Sucesso
+              {jaRealizado ? (
+                "Não existe cadastro para o código informado"
+              ) : (
+                <>
+                  <Check className="mr-2 h-5 w-5" /> "Check-out Realizado com
+                  Sucesso"{" "}
+                </>
+              )}
             </DialogTitle>
             <DialogDescription>
-              O check-out foi registrado no sistema.
+              {jaRealizado ? "" : "O check-out foi registrado no sistema."}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
