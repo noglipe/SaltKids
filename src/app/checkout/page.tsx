@@ -10,7 +10,7 @@ import * as z from "zod";
 import {
   ArrowLeft,
   Search,
-  QrCode,
+  
   UserRound,
   Check,
   Clock,
@@ -52,7 +52,7 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { formatarCPF, gerarCPFHash, mascararCPF } from "@/lib/utils";
-import {  RealQrScanner } from "@/components/real-qr-scanner";
+import QrCodeCheckout from "./_components/qrCodeCheckout";
 
 // Schema de validação do formulário de busca por CPF
 const cpfFormSchema = z.object({
@@ -93,25 +93,6 @@ interface Turma {
   nome: string;
   faixa_etaria: string;
 }
-
-interface Checkin {
-  id: string;
-  crianca_id: string;
-  turma_id: string;
-  horario: string;
-  checkout_horario: string | null;
-  status: string | null;
-  criancas: Crianca;
-  turmas: Turma;
-}
-
-type CheckinComRelacionamentos = {
-  id: string;
-  status: string;
-  checkout_horario: string | null;
-  criancas: { nome: string } | null;
-  turmas: { nome: string } | null;
-};
 
 export default function CheckOut() {
   const router = useRouter();
@@ -297,11 +278,21 @@ export default function CheckOut() {
         throw updateError;
       }
 
+      const { data: chekinData, error: errorChekin } = await supabase
+        .from("checkins")
+        .select("*")
+        .eq("id", checkinId)
+        .single();
+
+      if (errorChekin) throw errorChekin;
+
       toast("Check-out realizado com sucesso", {
         description: `Criança: ${
           (checkin.criancas as { nome: string })?.nome ?? "Desconhecida"
         }\nTurma: ${(checkin.turmas as { nome: string })?.nome ?? ""}`,
       });
+
+      setCheckins(chekinData);
 
       setSuccessDialogOpen(true);
 
@@ -460,20 +451,7 @@ export default function CheckOut() {
                 </Form>
               </TabsContent>
 
-              <TabsContent value="qrcode" className="space-y-6">
-                <div className="text-center p-6 border rounded-lg">
-                  <QrCode className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-                  <h3 className="text-lg font-medium mb-2">Escanear QR Code</h3>
-                  <p className="text-slate-500 mb-4">
-                    Escaneie o QR Code da criança para realizar o check-out
-                    rapidamente.
-                  </p>
-                  <Button onClick={() => setQrDialogOpen(true)}>
-                    Abrir Scanner
-                    <QrCode className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </TabsContent>
+              <QrCodeCheckout />
             </Tabs>
 
             {checkins.length > 0 && (
@@ -543,26 +521,6 @@ export default function CheckOut() {
             )}
           </CardContent>
         </Card>
-
-        {/* Diálogo do Scanner de QR Code */}
-        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Escanear QR Code</DialogTitle>
-              <DialogDescription>
-                Posicione o QR Code no centro da câmera para escanear.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="h-[300px]">
-              <RealQrScanner
-                onResult={handleQrCodeResult}
-              />
-            </div>
-            {scanError && (
-              <div className="text-red-500 text-sm mt-2">{scanError}</div>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Diálogo de Check-out Realizado com Sucesso */}
         <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
