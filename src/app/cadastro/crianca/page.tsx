@@ -18,8 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -32,7 +30,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +68,6 @@ export default function CadastroCriancaPage() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingData, setIsFetchingData] = useState(true);
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [responsaveisSelecionados, setResponsaveisSelecionados] = useState<
     ResponsavelSelecionado[]
@@ -91,7 +87,7 @@ export default function CadastroCriancaPage() {
   // Buscar responsáveis e turmas do banco de dados
   useEffect(() => {
     const fetchData = async () => {
-      setIsFetchingData(true);
+  
       try {
         // Buscar responsáveis
         const { data: responsaveisData, error: responsaveisError } =
@@ -108,9 +104,7 @@ export default function CadastroCriancaPage() {
           description:
             "Não foi possível carregar os dados. Tente novamente mais tarde.",
         });
-      } finally {
-        setIsFetchingData(false);
-      }
+      } 
     };
 
     fetchData();

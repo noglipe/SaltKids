@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useState } from "react";
+import { use, useState } from "react";
 
 import {
   User,
@@ -54,6 +54,7 @@ interface Responsavel {
 }
 
 export default function InfoPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [cpf, setCpf] = useState("");
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -210,6 +211,7 @@ export default function InfoPage({ params }: { params: { id: string } }) {
                         value={cpf}
                         onChange={handleCPFChange}
                         maxLength={14}
+                        autoComplete="off"
                         required
                       />
                     </div>
@@ -323,7 +325,7 @@ export default function InfoPage({ params }: { params: { id: string } }) {
                   Estas informações estão disponíveis apenas enquanto a criança
                   estiver no setor.
                 </p>
-                <p className="mt-1">Código de acesso: {params.id}</p>
+                <p className="mt-1">Código de acesso: {id}</p>
               </div>
             </div>
           )}
