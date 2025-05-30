@@ -10,18 +10,14 @@ import {
   UserPlus,
   LogIn,
   LogOut,
-  FileText,
-  Clock,
-  XCircle,
   ClapperboardIcon as ChalkboardTeacher,
   Menu,
-  LucideXCircle,
-  XSquareIcon,
-  XOctagon,
+
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Footer from "./footer";
 
 export default function MainLayout({
   children,
@@ -106,14 +102,8 @@ export default function MainLayout({
       <main className="flex-1">
         <div className="container py-4 md:py-8">{children}</div>
       </main>
-      <footer className="border-t py-4">
-        <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Sistema de Gestão do Ministério
-            Infantil
-          </p>
-        </div>
-      </footer>
+
+     <Footer />
     </div>
   );
 }

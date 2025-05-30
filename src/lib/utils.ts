@@ -38,10 +38,17 @@ export function mascararCPF(cpf: string) {
   const primeiros = numeros.slice(0, 3);
   const ultimos = numeros.slice(-2);
   return `${primeiros}.***.***-${ultimos}`;
-
 }
 
 export function gerarCPFHash(cpf: string): string {
   const apenasNumeros = cpf.replace(/\D/g, "");
   return CryptoJS.SHA256(apenasNumeros).toString();
+}
+
+export function formatarData(data: string): string {
+  try {
+    return new Date(data).toLocaleDateString("pt-BR")
+  } catch (error) {
+    return "Data inválida"
+  }
 }

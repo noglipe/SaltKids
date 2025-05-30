@@ -10,6 +10,8 @@ import {
   Clock,
   CheckCircle2,
   Loader2,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,13 +25,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import MainLayout from "@/components/main-layout";
@@ -37,6 +32,20 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface Crianca {
   id: string;
@@ -75,6 +84,9 @@ export default function CheckoutForcadoPage() {
   const [confirmacao, setConfirmacao] = useState(false);
   const [checkoutComplete, setCheckoutComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [searchCrianca, setSearchCrianca] = useState("");
+  const [criancaValue, setCriancaValue] = useState<string>("");
 
   // Buscar crianças com check-ins ativos diretamente do Supabase
   useEffect(() => {
@@ -111,8 +123,8 @@ export default function CheckoutForcadoPage() {
         }
 
         // Transformar os dados para o formato esperado pelo componente
-        const criancasFormatadas= checkinsData.map(
-          (checkin: Checkin|any) => ({
+        const criancasFormatadas = checkinsData.map(
+          (checkin: Checkin | any) => ({
             id: checkin.criancas?.id || "",
             nome: checkin.criancas?.nome || "",
             turma: {
@@ -232,6 +244,9 @@ export default function CheckoutForcadoPage() {
     }
   };
 
+  const criancaSelecionada =
+    criancas.find((c) => c.id === criancaValue) || null;
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -288,26 +303,78 @@ export default function CheckoutForcadoPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2 w-full">
+                <div className="w-full space-y-2">
                   <Label htmlFor="crianca">Criança</Label>
-                  <Select
-                    required
-                    onValueChange={(value) => {
-                      const crianca = criancas.find((c) => c.id === value);
-                      setSelectedCrianca(crianca || null);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma criança" />
-                    </SelectTrigger>
-                    <SelectContent className="w-full">
-                      {criancas.map((crianca) => (
-                        <SelectItem key={crianca.id} value={crianca.id}>
-                          {crianca.nome} - {crianca.turma.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                      >
+                        {criancaSelecionada
+                          ? `${criancaSelecionada.nome} – ${criancaSelecionada.turma.nome}`
+                          : "Selecione uma criança..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar criança..."
+                          value={searchCrianca}
+                          onValueChange={setSearchCrianca}
+                          autoFocus
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            Nenhuma criança encontrada.
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {criancas
+                              .filter(
+                                (c) =>
+                                  c.nome
+                                    .toLowerCase()
+                                    .includes(searchCrianca.toLowerCase()) 
+                              )
+                              .map((c) => (
+                                <CommandItem
+                                  key={c.id}
+                                  value={c.id}
+                                  onSelect={(value) => {
+                                    setCriancaValue(
+                                      value === criancaValue 
+                                      ? "" : value
+                                    );
+                                    setSelectedCrianca(
+                                      value === criancaValue 
+                                      ? null
+                                      : criancas.find(
+                                            (x) => x.id === value
+                                          ) || null
+                                    );
+                                    setOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      criancaValue === c.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {c.nome} – {c.turma.nome}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
@@ -377,7 +444,8 @@ export default function CheckoutForcadoPage() {
                       </span>
                       <span className="text-sm font-medium flex items-center">
                         <Clock className="mr-1 h-3 w-3" />
-                        {selectedCrianca.checkin && formatHorario(selectedCrianca.checkin.horario)}
+                        {selectedCrianca.checkin &&
+                          formatHorario(selectedCrianca.checkin.horario)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -385,7 +453,8 @@ export default function CheckoutForcadoPage() {
                         Responsável pelo check-in:
                       </span>
                       <span className="text-sm font-medium">
-                        {selectedCrianca.checkin && selectedCrianca.checkin.responsavel.nome}
+                        {selectedCrianca.checkin &&
+                          selectedCrianca.checkin.responsavel.nome}
                       </span>
                     </div>
                     <div className="flex justify-between">
