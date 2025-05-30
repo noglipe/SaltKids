@@ -18,7 +18,6 @@ import { toast } from "sonner";
 export default function QrCodeCheckout() {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [buscando, setBuscando] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const handleQrCodeResult = async (result: string) => {
@@ -32,7 +31,7 @@ export default function QrCodeCheckout() {
       const partes = result.split("/");
       const checkinId = partes[partes.length - 1];
 
-      setBuscando(true);
+
 
       // Buscar o check-in pelo ID
       const { data: checkin, error: fetchError } = await supabase
@@ -86,7 +85,6 @@ export default function QrCodeCheckout() {
       setScanError("Erro ao realizar o check-out. Por favor, tente novamente.");
     } finally {
       setSuccessDialogOpen(true);
-      setBuscando(false);
     }
   };
 
