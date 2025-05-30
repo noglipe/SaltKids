@@ -49,11 +49,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { RealQrScanner } from "../../components/real-qr-scanner";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { formatarCPF, gerarCPFHash, mascararCPF } from "@/lib/utils";
-import { CheckoutSucessoDialog } from "@/components/CheckoutSucessoDialog";
+import {  RealQrScanner } from "@/components/real-qr-scanner";
 
 // Schema de validação do formulário de busca por CPF
 const cpfFormSchema = z.object({
@@ -557,7 +556,6 @@ export default function CheckOut() {
             <div className="h-[300px]">
               <RealQrScanner
                 onResult={handleQrCodeResult}
-                onError={(error) => setScanError(error.message)}
               />
             </div>
             {scanError && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -27,11 +27,18 @@ export function RealQrScanner({
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
+  // Envolver as funções para evitar recriação e múltiplas execuções do useEffect
+  const stableOnResult = useCallback(onResult, []);
+  const stableOnError = useCallback(onError ?? (() => {}), []);
+
   useEffect(() => {
+    let isMounted = true;
+
     const startScanner = async () => {
       try {
         setLoading(true);
         setError(null);
+        setPermissionDenied(false);
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           setError("Seu navegador não suporta acesso à câmera.");
@@ -41,7 +48,7 @@ export function RealQrScanner({
 
         try {
           await navigator.mediaDevices.getUserMedia({ video: true });
-        } catch (err) {
+        } catch {
           setPermissionDenied(true);
           setLoading(false);
           return;
@@ -54,6 +61,12 @@ export function RealQrScanner({
           return;
         }
 
+        if (scannerRef.current) {
+          // Se scanner já existir, para ele antes de criar outro
+          await scannerRef.current.stop();
+          scannerRef.current.clear();
+        }
+
         const scanner = new Html5Qrcode(SCANNER_ID);
         scannerRef.current = scanner;
 
@@ -64,54 +77,65 @@ export function RealQrScanner({
           return;
         }
 
-        const backCamera = cameras.find((cam) =>
-          cam.label.toLowerCase().includes("back")
+        // Usa back camera se existir, senão a primeira
+        const cameraId =
+          cameras.find((cam) => cam.label.toLowerCase().includes("back"))?.id ||
+          cameras[0].id;
+
+        await scanner.start(
+          cameraId,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText) => {
+            if (
+              scanner.getState() === Html5QrcodeScannerState.SCANNING &&
+              isMounted
+            ) {
+              stableOnResult(decodedText);
+              scanner.stop().then(() => {
+                setIsScanning(false);
+              });
+            }
+          },
+          (errorMessage) => {
+            // opcional: lidar com erros de leitura aqui
+          }
         );
 
-        setTimeout(async () => {
-          await scanner.start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 },
-            },
-            (decodedText) => {
-              if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
-                onResult(decodedText);
-                scanner.stop().then(() => {
-                  setIsScanning(false);
-                });
-              }
-            },
-            () => {
-              
-            }
-          );
-
+        if (isMounted) {
           setIsScanning(true);
           setLoading(false);
-        }, 300);
+        }
       } catch (err) {
-        console.error("Erro ao iniciar scanner:", err);
-        const msg = err instanceof Error ? err.message : String(err);
-        setError(`Erro ao iniciar scanner: ${msg}`);
-        setLoading(false);
-        if (onError && err instanceof Error) onError(err);
+        if (isMounted) {
+          console.error("Erro ao iniciar scanner:", err);
+          const msg = err instanceof Error ? err.message : String(err);
+          setError(`Erro ao iniciar scanner: ${msg}`);
+          setLoading(false);
+          stableOnError(err as Error);
+        }
       }
     };
 
     startScanner();
 
     return () => {
-      scannerRef.current?.stop().catch(console.error);
+      isMounted = false;
+      scannerRef.current?.stop().catch(() => {});
+      scannerRef.current?.clear();
+      scannerRef.current = null;
     };
-  }, [onResult, onError]);
+    // Dependências estáveis para evitar múltiplas execuções
+  }, [stableOnResult, stableOnError]);
 
   const handleRetry = () => {
     setPermissionDenied(false);
     setError(null);
     setLoading(true);
-    window.location.reload(); // Reinicia o scanner
+    // Só reativa o useEffect reiniciando os estados
+    // Não usar window.location.reload();
   };
 
   return (
@@ -153,15 +177,13 @@ export function RealQrScanner({
 
       <div
         id={SCANNER_ID}
-        className={`w-full ${
-          !loading && !permissionDenied && !error
-            ? "block"
-            : "opacity-0 h-0 overflow-hidden"
-        }`}
+        className="w-full"
         style={{
           height: `${height}px`,
           maxWidth: `${width}px`,
           margin: "0 auto",
+          visibility:
+            loading || permissionDenied || error ? "hidden" : "visible",
         }}
       />
 
