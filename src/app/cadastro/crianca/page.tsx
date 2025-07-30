@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronsUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -100,7 +100,7 @@ export default function CadastroCriancaPage() {
         setResponsaveis(responsaveisData || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
-        toast("Erro", {
+        toast.error("Erro", {
           description:
             "Não foi possível carregar os dados. Tente novamente mais tarde.",
         });
@@ -121,14 +121,14 @@ export default function CadastroCriancaPage() {
   // Função para adicionar um responsável à lista de selecionados
   const adicionarResponsavel = () => {
     if (!selectedResponsavel) {
-      toast("Atenção", {
+      toast.warning("Atenção", {
         description: "Selecione um responsável.",
       });
       return;
     }
 
     if (!parentesco) {
-      toast("Atenção", {
+      toast.warning("Atenção", {
         description: "Selecione o parentesco.",
       });
       return;
@@ -136,7 +136,7 @@ export default function CadastroCriancaPage() {
 
     // Verificar se o responsável já foi adicionado
     if (responsaveisSelecionados.some((r) => r.id === selectedResponsavel)) {
-      toast("Atenção", {
+      toast.warning("Atenção", {
         description: "Este responsável já foi adicionado.",
       });
       return;
@@ -159,7 +159,7 @@ export default function CadastroCriancaPage() {
       setDialogOpen(false);
       setFiltroResponsavel("");
 
-      toast("Responsável adicionado", {
+      toast.success("Responsável adicionado", {
         description: `${responsavel.nome} foi adicionado como ${parentesco}.`,
       });
     }
@@ -178,7 +178,7 @@ export default function CadastroCriancaPage() {
 
     // Validar se pelo menos um responsável foi adicionado
     if (responsaveisSelecionados.length === 0) {
-      toast("Atenção", {
+      toast.warning("Atenção", {
         description: "É necessário adicionar pelo menos um responsável.",
       });
       return;
@@ -186,7 +186,7 @@ export default function CadastroCriancaPage() {
 
     // Validar campos obrigatórios
     if (!formData.nome || !formData.dataNascimento) {
-      toast("Atenção", {
+      toast.warning("Atenção", {
         description: "Preencha todos os campos obrigatórios.",
       });
       return;
@@ -222,14 +222,14 @@ export default function CadastroCriancaPage() {
         }
       }
 
-      toast("Sucesso", {
+      toast.success("Sucesso", {
         description: "Criança cadastrada com sucesso!",
       });
 
       router.push("/");
     } catch (error: any) {
       console.error("Erro ao cadastrar criança:", error);
-      toast("Erro", {
+      toast.error("Erro", {
         description:
           error.message ||
           "Não foi possível cadastrar a criança. Tente novamente.",
@@ -409,7 +409,7 @@ export default function CadastroCriancaPage() {
                       Nenhum responsável adicionado
                     </p>
                     <p className="text-sm text-gray-400 mt-1">
-                      Clique em "Adicionar Responsável" para vincular um
+                      Clique em &quot;Adicionar Responsável&quot; para vincular um
                       responsável à criança
                     </p>
                   </div>

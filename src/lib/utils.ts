@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { descriptografarTexto } from "./crypto";
 
-var CryptoJS = require("crypto-js");
+import CryptoJS from "crypto-js";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -49,6 +49,7 @@ export function formatarData(data: string): string {
   try {
     return new Date(data).toLocaleDateString("pt-BR")
   } catch (error) {
+    console.log(`Error ${error}`)
     return "Data inválida"
   }
 }
